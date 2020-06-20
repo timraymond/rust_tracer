@@ -11,12 +11,19 @@ impl Ray {
     }
 }
 
-#[derive(PartialEq,Debug)]
+#[derive(PartialEq,Debug,Copy,Clone)]
 pub struct Vec3(pub f64, pub f64, pub f64);
 
 impl Vec3 {
     pub fn unit() -> Vec3 {
         Vec3(1.0, 1.0, 1.0)
+    }
+
+    pub fn to_unit(&self) -> Vec3 {
+        let k = 1.0 / self.len();
+        Vec3(self.0 * k,
+             self.1 * k,
+             self.2 * k)
     }
 
     pub fn dot(&self, _rhs: &Vec3) -> f64 {
