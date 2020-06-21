@@ -47,6 +47,9 @@ fn main() {
 }
 
 fn color(r: Ray) -> Vec3 {
+    if hit_sphere(Vec3(0.0, 0.0, -1.0), 0.5, &r) {
+        return Vec3(1.0, 0.0, 0.0);
+    }
     // extract a unit direction vector from the ray
     let Vec3(_, y, _) = r.direction.to_unit();
 
@@ -55,4 +58,16 @@ fn color(r: Ray) -> Vec3 {
     let t = 0.5 * (y + 1.0);
     (Vec3(1.0, 1.0, 1.0) * (1.0-t)) +
          (Vec3(0.5, 0.7, 1.0) * t)
+}
+
+fn hit_sphere(center: Vec3, radius: f64, r: &Ray) -> bool {
+    let oc = r.origin - center;
+
+    let a = r.direction.dot(&r.direction);
+    let b = oc.dot(&r.direction) * 2.0;
+    let c = oc.dot(&oc) - radius * radius;
+
+    let discriminant = b*b - (a*c)*4.0;
+
+    return discriminant > 0.0;
 }
