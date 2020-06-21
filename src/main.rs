@@ -50,7 +50,7 @@ fn color(r: Ray) -> Vec3 {
     let t =  hit_sphere(Vec3(0.0, 0.0, -1.0), 0.5, &r);
 
     if t > 0.0 {
-        let Vec3(nx, ny, nz) = r.point_at_param(t) - Vec3(0.0,0.0,-1.0);
+        let Vec3(nx, ny, nz) = (r.point_at_param(t) - Vec3(0.0,0.0,-1.0)).to_unit();
         return Vec3(nx+1.0, ny+1.0, nz+1.0) * 0.5;
     }
 
