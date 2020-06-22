@@ -1,5 +1,21 @@
 use std::ops;
 
+pub struct Camera {
+    pub lower_left: Vec3,
+    pub horizontal: Vec3,
+    pub vertical: Vec3,
+    pub origin: Vec3,
+}
+
+impl Camera {
+    pub fn get_ray(&self, u: f64, v: f64) -> Ray {
+        Ray{
+            origin: self.origin,
+            direction: self.lower_left + (self.horizontal * u) + (self.vertical * v) - self.origin,
+        }
+    }
+}
+
 pub trait Solid {
     fn hit(&self, r: &Ray, t_min: f64, t_max: f64) -> Option<HitRecord>;
 }

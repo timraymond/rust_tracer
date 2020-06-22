@@ -1,11 +1,13 @@
 mod vec3;
 
 use vec3::*;
+use rand::Rng;
 
 fn main() {
     // define extents
     let nx = 200;
     let ny = 100;
+    let ns = 100;
 
     // P3 indicates ASCII color output
     println!("P3");
@@ -17,10 +19,12 @@ fn main() {
     println!("255");
 
     // Setup vectors for ray tracing
-    let lower_left = Vec3(-2.0 , -1.0 , -1.0);
-    let horizontal = Vec3(4.0  , 0.0  , 0.0);
-    let vertical   = Vec3(0.0  , 2.0  , 0.0);
-    let origin     = Vec3(0.0  , 0.0  , 0.0);
+    let cam = Camera{
+        lower_left : Vec3(-2.0 , -1.0 , -1.0),
+        horizontal : Vec3(4.0  , 0.0  , 0.0),
+        vertical   : Vec3(0.0  , 2.0  , 0.0),
+        origin     : Vec3(0.0  , 0.0  , 0.0),
+    };
 
     // create geometry
     
@@ -34,27 +38,34 @@ fn main() {
                 center: Vec3(0.0, -100.5, -1.0),
                 radius: 100.0,
             },
-        ],
-    };
+            ],
+        };
+
+    let mut rng = rand::thread_rng();
 
     // Output color information
     for j in (0..ny).rev() {
         for i in 0..nx {
-            // Compute pixel offsets as percentage in range 0.0 < u,v < 1.0
-            let u = i as f64 / nx as f64;
-            let v = j as f64 / ny as f64;
 
-            // create ray to trace
-            let r = Ray{
-                origin: origin,
-                direction: lower_left + (horizontal * u + vertical * v),
-            };
+            let mut col = Vec3(0.0, 0.0, 0.0);
 
-            let col = color(&r, &sg) * 255.99;
+            for s in (0..ns) {
+                // Compute pixel offsets as percentage in range 0.0 < u,v < 1.0
+                let ru: f64 = rng.gen();
+                let rv: f64 = rng.gen();
 
-            let ir = col.0 as i32;
-            let ig = col.1 as i32;
-            let ib = col.2 as i32;
+                let u = ((i as f64) + ru) / nx as f64;
+                let v = ((j as f64) + rv) / ny as f64;
+
+                let r = cam.get_ray(u, v);
+                col = color(&r, &sg) + col;
+            }
+
+            col = col / ns as f64;
+
+            let ir = (col.0 * 255.99) as i32;
+            let ig = (col.1 * 255.99) as i32;
+            let ib = (col.2 * 255.99) as i32;
 
             println!("{} {} {}", ir, ig, ib);
         }
