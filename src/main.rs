@@ -22,6 +22,21 @@ fn main() {
     let vertical   = Vec3(0.0  , 2.0  , 0.0);
     let origin     = Vec3(0.0  , 0.0  , 0.0);
 
+    // create geometry
+    
+    let sg = SolidGroup{
+        solids: vec![
+            Sphere{
+                center: Vec3(0.0, 0.0, -1.0),
+                radius: 0.5,
+            },
+            Sphere{
+                center: Vec3(0.0, -100.5, -1.0),
+                radius: 100.0,
+            },
+        ],
+    };
+
     // Output color information
     for j in (0..ny).rev() {
         for i in 0..nx {
@@ -35,7 +50,7 @@ fn main() {
                 direction: lower_left + (horizontal * u + vertical * v),
             };
 
-            let col = color(r) * 255.99;
+            let col = color(&r, &sg) * 255.99;
 
             let ir = col.0 as i32;
             let ig = col.1 as i32;
@@ -46,36 +61,24 @@ fn main() {
     }
 }
 
-fn color(r: Ray) -> Vec3 {
-    let t =  hit_sphere(Vec3(0.0, 0.0, -1.0), 0.5, &r);
+fn color(r: &Ray, s: &dyn Solid) -> Vec3 {
+    match s.hit(r, 0.0, std::f64::MAX) {
+        Some(r) => {
+            let Vec3(nx, ny, nz) = r.normal;
 
-    if t > 0.0 {
-        let Vec3(nx, ny, nz) = (r.point_at_param(t) - Vec3(0.0,0.0,-1.0)).to_unit();
-        return Vec3(nx+1.0, ny+1.0, nz+1.0) * 0.5;
+            Vec3(nx+1.0, ny+1.0, nz+1.0)* 0.5
+        }
+        
+        None => {
+            // extract a unit direction vector from the ray
+            let Vec3(_, y, _) = r.direction.to_unit();
+
+            // t is the "blueness". When t=1.0 we want blue, otherwise we want white. We compute t by the
+            // "upness" and "downness"
+            let t = 0.5 * (y + 1.0);
+                (Vec3(1.0, 1.0, 1.0) * (1.0-t)) +
+                 (Vec3(0.5, 0.7, 1.0) * t)
+        }
     }
 
-    // extract a unit direction vector from the ray
-    let Vec3(_, y, _) = r.direction.to_unit();
-
-    // t is the "blueness". When t=1.0 we want blue, otherwise we want white. We compute t by the
-    // "upness" and "downness"
-    let t = 0.5 * (y + 1.0);
-    (Vec3(1.0, 1.0, 1.0) * (1.0-t)) +
-         (Vec3(0.5, 0.7, 1.0) * t)
-}
-
-fn hit_sphere(center: Vec3, radius: f64, r: &Ray) -> f64 {
-    let oc = r.origin - center;
-
-    let a = r.direction.dot(&r.direction);
-    let b = oc.dot(&r.direction) * 2.0;
-    let c = oc.dot(&oc) - radius * radius;
-
-    let discriminant = b*b - (a*c)*4.0;
-
-    if discriminant < 0.0 {
-        return -1.0;
-    } else {
-        return (-b - discriminant.sqrt()) / (a*2.0);
-    }
 }
