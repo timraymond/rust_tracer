@@ -107,13 +107,11 @@ fn color(r: &Ray, s: &dyn Solid, depth: isize) -> Vec3 {
 }
 
 fn random_in_unit_sphere() -> Vec3 {
-    // keep selecting vectors until we get one
-    // within the unit sphere
+    let mut rng = rand::thread_rng();
 
-    loop {
-        let v = Vec3::random(-1.0,1.0);
-        if v.len_squared() < 1.0 {
-            return v
-        }
-    }
+    let a: f64 = rng.gen_range(0.0, 2.0*std::f64::consts::PI);
+    let z: f64 = rng.gen_range(-1.0, 1.0);
+    let r = (1.0 - (z*z)).sqrt();
+
+    Vec3(r*a.cos(), r*a.sin(), z)
 }
