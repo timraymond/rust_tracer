@@ -1,4 +1,5 @@
 use std::ops;
+use rand::Rng;
 
 pub struct Camera {
     pub lower_left: Vec3,
@@ -107,6 +108,14 @@ impl Vec3 {
         Vec3(1.0, 1.0, 1.0)
     }
 
+    pub fn random(lower: f64, upper: f64) -> Vec3 {
+        Vec3(
+            rand::thread_rng().gen_range(lower, upper),
+            rand::thread_rng().gen_range(lower, upper),
+            rand::thread_rng().gen_range(lower, upper),
+        )
+    }
+
     pub fn to_unit(&self) -> Vec3 {
         let k = 1.0 / self.len();
         Vec3(self.0 * k,
@@ -121,9 +130,13 @@ impl Vec3 {
     }
 
     pub fn len(&self) -> f64 {
+        self.len_squared().sqrt()
+    }
+
+    pub fn len_squared(&self) -> f64 {
         (self.0*self.0 +
          self.1*self.1 +
-         self.2*self.2).sqrt()
+         self.2*self.2)
     }
 
     pub fn cross(&self, _rhs: Vec3) -> Vec3 {

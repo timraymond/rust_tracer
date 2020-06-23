@@ -9,6 +9,8 @@ fn main() {
     let ny = 100;
     let ns = 100;
 
+    let max_depth = 50;
+
     // P3 indicates ASCII color output
     println!("P3");
 
@@ -58,26 +60,36 @@ fn main() {
                 let v = ((j as f64) + rv) / ny as f64;
 
                 let r = cam.get_ray(u, v);
-                col = color(&r, &sg) + col;
+                col = color(&r, &sg, max_depth) + col;
             }
 
             col = col / ns as f64;
 
-            let ir = (col.0 * 255.99) as i32;
-            let ig = (col.1 * 255.99) as i32;
-            let ib = (col.2 * 255.99) as i32;
+            let ir = (col.0.sqrt() * 255.99) as i32;
+            let ig = (col.1.sqrt() * 255.99) as i32;
+            let ib = (col.2.sqrt() * 255.99) as i32;
 
             println!("{} {} {}", ir, ig, ib);
         }
     }
 }
 
-fn color(r: &Ray, s: &dyn Solid) -> Vec3 {
+fn color(r: &Ray, s: &dyn Solid, depth: isize) -> Vec3 {
+
+    if depth <= 0 {
+        return Vec3(0.0, 0.0, 0.0)
+    }
+
     match s.hit(r, 0.0, std::f64::MAX) {
         Some(r) => {
-            let Vec3(nx, ny, nz) = r.normal;
+            let target = r.p + r.normal + random_in_unit_sphere();
 
-            Vec3(nx+1.0, ny+1.0, nz+1.0)* 0.5
+            let next = Ray{
+                origin: r.p,
+                direction: target - r.p,
+            };
+
+            color(&next, s, depth-1) * 0.5
         }
         
         None => {
@@ -92,4 +104,16 @@ fn color(r: &Ray, s: &dyn Solid) -> Vec3 {
         }
     }
 
+}
+
+fn random_in_unit_sphere() -> Vec3 {
+    // keep selecting vectors until we get one
+    // within the unit sphere
+
+    loop {
+        let v = Vec3::random(-1.0,1.0);
+        if v.len_squared() < 1.0 {
+            return v
+        }
+    }
 }
