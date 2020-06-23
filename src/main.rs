@@ -80,7 +80,7 @@ fn color(r: &Ray, s: &dyn Solid, depth: isize) -> Vec3 {
         return Vec3(0.0, 0.0, 0.0)
     }
 
-    match s.hit(r, 0.0, std::f64::MAX) {
+    match s.hit(r, 0.001, std::f64::MAX) {
         Some(r) => {
             let target = r.p + r.normal + random_in_unit_sphere();
 
