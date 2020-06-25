@@ -40,6 +40,20 @@ fn main() {
                 },
             },
             Sphere{
+                center: Vec3(1.0, 0.0, -1.0),
+                radius: 0.5,
+                material: &Metal{
+                    albedo: Vec3(0.7, 0.7, 0.0),
+                },
+            },
+            Sphere{
+                center: Vec3(-1.0, 0.0, -1.0),
+                radius: 0.5,
+                material: &Metal{
+                    albedo: Vec3(0.0, 0.0, 0.7),
+                },
+            },
+            Sphere{
                 center: Vec3(0.0, -100.5, -1.0),
                 radius: 100.0,
                 material: &Lambertian{

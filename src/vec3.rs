@@ -28,6 +28,25 @@ impl Material for Lambertian {
     }
 }
 
+pub struct Metal {
+    pub albedo: Vec3,
+}
+
+impl Material for Metal {
+    fn scatter(&self, r: &Ray, normal: &Vec3, origin: &Vec3) -> (Vec3, Ray) {
+        let scattered = Ray{
+            origin: *origin,
+            direction: reflect(r.direction.to_unit(), *normal),
+        };
+
+        (self.albedo, scattered)
+    }
+}
+
+fn reflect(incident: Vec3, normal: Vec3) -> Vec3 {
+    return incident - normal * (incident.dot(&normal) * 2.0);
+}
+
 fn random_in_unit_sphere() -> Vec3 {
     let mut rng = rand::thread_rng();
 
