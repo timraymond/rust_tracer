@@ -35,10 +35,16 @@ fn main() {
             Sphere{
                 center: Vec3(0.0, 0.0, -1.0),
                 radius: 0.5,
+                material: &Lambertian{
+                    albedo: Vec3(0.7, 0.0, 0.0),
+                },
             },
             Sphere{
                 center: Vec3(0.0, -100.5, -1.0),
                 radius: 100.0,
+                material: &Lambertian{
+                    albedo: Vec3(0.0, 0.7, 0.0),
+                },
             },
             ],
         };
@@ -81,15 +87,9 @@ fn color(r: &Ray, s: &dyn Solid, depth: isize) -> Vec3 {
     }
 
     match s.hit(r, 0.001, std::f64::MAX) {
-        Some(r) => {
-            let target = r.p + r.normal + random_in_unit_sphere();
-
-            let next = Ray{
-                origin: r.p,
-                direction: target - r.p,
-            };
-
-            color(&next, s, depth-1) * 0.5
+        Some(rec) => {
+            let (atten, next) = rec.material.scatter(r, &rec.normal, &rec.p);
+            color(&next, s, depth-1) * atten
         }
         
         None => {
@@ -104,14 +104,4 @@ fn color(r: &Ray, s: &dyn Solid, depth: isize) -> Vec3 {
         }
     }
 
-}
-
-fn random_in_unit_sphere() -> Vec3 {
-    let mut rng = rand::thread_rng();
-
-    let a: f64 = rng.gen_range(0.0, 2.0*std::f64::consts::PI);
-    let z: f64 = rng.gen_range(-1.0, 1.0);
-    let r = (1.0 - (z*z)).sqrt();
-
-    Vec3(r*a.cos(), r*a.sin(), z)
 }

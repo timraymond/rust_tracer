@@ -8,6 +8,36 @@ pub struct Camera {
     pub origin: Vec3,
 }
 
+pub trait Material {
+    fn scatter(&self, r: &Ray, normal: &Vec3, origin: &Vec3) -> (Vec3, Ray);
+}
+
+/// Lambertian describes a perfectly diffuse material of a certain color
+pub struct Lambertian {
+    pub albedo: Vec3,
+}
+
+impl Material for Lambertian {
+    fn scatter(&self, _: &Ray, normal: &Vec3, origin: &Vec3) -> (Vec3, Ray) {
+        let scattered = Ray{
+            origin: *origin,
+            direction: random_in_unit_sphere() + *normal,
+        };
+
+        (self.albedo, scattered)
+    }
+}
+
+fn random_in_unit_sphere() -> Vec3 {
+    let mut rng = rand::thread_rng();
+
+    let a: f64 = rng.gen_range(0.0, 2.0*std::f64::consts::PI);
+    let z: f64 = rng.gen_range(-1.0, 1.0);
+    let r = (1.0 - (z*z)).sqrt();
+
+    Vec3(r*a.cos(), r*a.sin(), z)
+}
+
 impl Camera {
     pub fn get_ray(&self, u: f64, v: f64) -> Ray {
         Ray{
@@ -40,12 +70,13 @@ impl<T: Solid> Solid for SolidGroup<T> {
     }
 }
 
-pub struct Sphere {
+pub struct Sphere<'a> {
     pub center: Vec3,
     pub radius: f64,
+    pub material: &'a dyn Material,
 }
 
-impl Solid for Sphere {
+impl <'a> Solid for Sphere<'a> {
     fn hit(&self, r: &Ray, t_min: f64, t_max: f64) -> Option<HitRecord> {
         let oc = r.origin - self.center;
 
@@ -63,6 +94,7 @@ impl Solid for Sphere {
                     t: near,
                     p: p,
                     normal: (p - self.center) / self.radius,
+                    material: self.material,
                 });
             }
 
@@ -75,6 +107,7 @@ impl Solid for Sphere {
                     t: far,
                     p: p,
                     normal: (p - self.center) / self.radius,
+                    material: self.material,
                 })
             }
         }
@@ -83,10 +116,11 @@ impl Solid for Sphere {
     }
 }
 
-pub struct HitRecord {
+pub struct HitRecord<'a> {
     pub t: f64,
     pub p: Vec3,
     pub normal: Vec3,
+    pub material: &'a dyn Material,
 }
 
 pub struct Ray{
