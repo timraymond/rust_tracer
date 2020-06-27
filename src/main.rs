@@ -36,28 +36,36 @@ fn main() {
                 center: Vec3(0.0, 0.0, -1.0),
                 radius: 0.5,
                 material: &Lambertian{
-                    albedo: Vec3(0.7, 0.0, 0.0),
-                },
-            },
-            Sphere{
-                center: Vec3(1.0, 0.0, -1.0),
-                radius: 0.5,
-                material: &Metal{
-                    albedo: Vec3(0.7, 0.7, 0.0),
-                },
-            },
-            Sphere{
-                center: Vec3(-1.0, 0.0, -1.0),
-                radius: 0.5,
-                material: &Metal{
-                    albedo: Vec3(0.0, 0.0, 0.7),
+                    albedo: Vec3(0.1, 0.2, 0.5),
                 },
             },
             Sphere{
                 center: Vec3(0.0, -100.5, -1.0),
                 radius: 100.0,
                 material: &Lambertian{
-                    albedo: Vec3(0.0, 0.7, 0.0),
+                    albedo: Vec3(0.8, 0.8, 0.0),
+                },
+            },
+            Sphere{
+                center: Vec3(1.0, 0.0, -1.0),
+                radius: 0.5,
+                material: &Metal{
+                    albedo: Vec3(0.8, 0.6, 0.2),
+                    fuzz: 0.0,
+                },
+            },
+            Sphere{
+                center: Vec3(-1.0, 0.0, -1.0),
+                radius: 0.5,
+                material: &Dielectric{
+                    ref_idx: 1.5,
+                },
+            },
+            Sphere{
+                center: Vec3(-1.0, 0.0, -1.0),
+                radius: -0.45,
+                material: &Dielectric{
+                    ref_idx: 1.5,
                 },
             },
             ],

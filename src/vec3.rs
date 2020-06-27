@@ -30,13 +30,14 @@ impl Material for Lambertian {
 
 pub struct Metal {
     pub albedo: Vec3,
+    pub fuzz: f64,
 }
 
 impl Material for Metal {
     fn scatter(&self, r: &Ray, normal: &Vec3, origin: &Vec3) -> (Vec3, Ray) {
         let scattered = Ray{
             origin: *origin,
-            direction: reflect(r.direction.to_unit(), *normal),
+            direction: reflect(r.direction.to_unit(), *normal) + (random_in_unit_sphere() * self.fuzz),
         };
 
         (self.albedo, scattered)
@@ -45,6 +46,81 @@ impl Material for Metal {
 
 fn reflect(incident: Vec3, normal: Vec3) -> Vec3 {
     return incident - normal * (incident.dot(&normal) * 2.0);
+}
+
+fn refract(inv: Vec3, norm: Vec3, etai_over_etat: f64) -> Vec3 {
+    let cos_theta = (-inv).dot(&norm);
+    
+    let r_out_parallel = (inv + norm * cos_theta) * etai_over_etat;
+    let r_out_perp = norm * (-(1.0 - r_out_parallel.len_squared()).sqrt());
+
+    return r_out_parallel + r_out_perp;
+}
+
+pub struct Dielectric {
+    pub ref_idx: f64,
+}
+
+fn schlick(cosine: f64, ref_idx: f64) -> f64 {
+    let r0 = (1.0-ref_idx) / (1.0 + ref_idx);
+    let r1 = r0*r0;
+    r1 + (1.0 - r1) * (1.0 - cosine).powf(5.0)
+}
+
+impl Material for Dielectric {
+    fn scatter(&self, r: &Ray, normal: &Vec3, origin: &Vec3) -> (Vec3, Ray) {
+        let front_face = r.direction.dot(normal) < 0.0;
+
+        let norm = if front_face {
+            *normal
+        } else {
+            -(*normal)
+        };
+
+        let unit_direction = r.direction.to_unit();
+
+        let cos_theta = (-unit_direction).dot(&norm).min(1.0);
+        let sin_theta = (1.0 - cos_theta*cos_theta).sqrt();
+
+        let attenuation = Vec3(1.0, 1.0, 1.0);
+
+        let etai_over_etat = if front_face {
+            self.ref_idx.recip()
+        } else {
+            self.ref_idx
+        };
+
+        let reflect_prob = schlick(cos_theta, etai_over_etat);
+        let should_reflect: f64 = rand::thread_rng().gen();
+
+
+        if etai_over_etat * sin_theta > 1.0 {
+            // total internal reflection
+            let scattered = Ray{
+                origin: *origin,
+                direction: reflect(unit_direction, norm),
+            };
+            return (attenuation, scattered);
+        }
+
+        if should_reflect < reflect_prob {
+            // total internal reflection
+            let scattered = Ray{
+                origin: *origin,
+                direction: reflect(unit_direction, norm),
+            };
+            return (attenuation, scattered);
+        }
+
+        let refracted = refract(unit_direction, norm, etai_over_etat);
+
+        let scattered = Ray{
+            origin: *origin,
+            direction: refracted,
+        };
+
+        (attenuation, scattered)
+    }
 }
 
 fn random_in_unit_sphere() -> Vec3 {
@@ -112,8 +188,8 @@ impl <'a> Solid for Sphere<'a> {
                 return Some(HitRecord{
                     t: near,
                     p: p,
-                    normal: (p - self.center) / self.radius,
                     material: self.material,
+                    normal: (p - self.center) / self.radius,
                 });
             }
 
@@ -125,9 +201,9 @@ impl <'a> Solid for Sphere<'a> {
                 return Some(HitRecord{
                     t: far,
                     p: p,
-                    normal: (p - self.center) / self.radius,
                     material: self.material,
-                })
+                    normal: (p - self.center) / self.radius,
+                });
             }
         }
 
@@ -196,6 +272,14 @@ impl Vec3 {
         Vec3(self.1*_rhs.2 - self.2*_rhs.1,
              -(self.0*_rhs.2 - self.2*_rhs.0),
              self.0*_rhs.1 - self.1*_rhs.0)
+    }
+}
+
+impl ops::Neg for Vec3 {
+    type Output = Vec3;
+
+    fn neg(self) -> Self::Output {
+        self * -1.0
     }
 }
 
