@@ -21,12 +21,7 @@ fn main() {
     println!("255");
 
     // Setup vectors for ray tracing
-    let cam = Camera{
-        lower_left : Vec3(-2.0 , -1.0 , -1.0),
-        horizontal : Vec3(4.0  , 0.0  , 0.0),
-        vertical   : Vec3(0.0  , 2.0  , 0.0),
-        origin     : Vec3(0.0  , 0.0  , 0.0),
-    };
+    let cam = Camera::new(120.0, nx as f64 / ny as f64);
 
     // create geometry
     
@@ -79,7 +74,7 @@ fn main() {
 
             let mut col = Vec3(0.0, 0.0, 0.0);
 
-            for s in (0..ns) {
+            for _ in 0..ns {
                 // Compute pixel offsets as percentage in range 0.0 < u,v < 1.0
                 let ru: f64 = rng.gen();
                 let rv: f64 = rng.gen();
