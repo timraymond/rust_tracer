@@ -21,7 +21,7 @@ fn main() {
     println!("255");
 
     // Setup vectors for ray tracing
-    let cam = Camera::new(120.0, nx as f64 / ny as f64);
+    let cam = Camera::new(Vec3(-2.0, 2.0, 1.0), Vec3(0.0, 0.0, -1.0), Vec3(0.0, 1.0, 0.0), 20.0, nx as f64 / ny as f64);
 
     // create geometry
     
