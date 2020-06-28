@@ -2,14 +2,20 @@ use std::ops;
 use rand::Rng;
 
 pub struct Camera {
-    pub lower_left: Vec3,
-    pub horizontal: Vec3,
-    pub vertical: Vec3,
-    pub origin: Vec3,
+    lower_left: Vec3,
+    horizontal: Vec3,
+    vertical: Vec3,
+    origin: Vec3,
+
+    u: Vec3,
+    v: Vec3,
+    w: Vec3,
+
+    lens_radius: f64,
 }
 
 impl Camera {
-    pub fn new(lookfrom: Vec3, lookat: Vec3, vup: Vec3, vfov: f64, aspect_ratio: f64) -> Camera {
+    pub fn new(lookfrom: Vec3, lookat: Vec3, vup: Vec3, vfov: f64, aspect_ratio: f64, aperature: f64, focus_dist: f64) -> Camera {
         let theta = vfov.to_radians();
         let h = (theta / 2.0).tan();
 
@@ -21,14 +27,45 @@ impl Camera {
         let v = w.cross(u);
 
         let origin = lookfrom;
-        let horizontal = u * viewport_width;
-        let vertical = v * viewport_height;
+        let horizontal = (u * viewport_width) * focus_dist;
+        let vertical = (v * viewport_height) * focus_dist;
+        let lens_radius = aperature / 2.0;
 
         Camera{
             origin,
             horizontal,
             vertical,
-            lower_left: origin - horizontal / 2.0 - vertical / 2.0 - w,
+            lens_radius,
+            u,
+            v,
+            w,
+            lower_left: origin - horizontal / 2.0 - vertical / 2.0 - w * focus_dist,
+        }
+    }
+
+    pub fn get_ray(&self, s: f64, t: f64) -> Ray {
+        let Vec3(rd_x, rd_y, _) = random_in_unit_disk() * self.lens_radius;
+        let offset = self.u * rd_x + self.v * rd_y;
+
+        Ray{
+            origin: self.origin + offset,
+            direction: self.lower_left + self.horizontal*s + self.vertical*t - self.origin - offset,
+        }
+    }
+}
+
+fn random_in_unit_disk() -> Vec3 {
+    let mut rng = rand::thread_rng();
+
+    loop {
+        let p = Vec3(
+            rng.gen_range(-1.0, 1.0),
+            rng.gen_range(-1.0, 1.0),
+            0.0,
+        );
+
+        if p.len_squared() < 1.0 {
+            return p;
         }
     }
 }
@@ -156,15 +193,6 @@ fn random_in_unit_sphere() -> Vec3 {
     let r = (1.0 - (z*z)).sqrt();
 
     Vec3(r*a.cos(), r*a.sin(), z)
-}
-
-impl Camera {
-    pub fn get_ray(&self, u: f64, v: f64) -> Ray {
-        Ray{
-            origin: self.origin,
-            direction: self.lower_left + (self.horizontal * u) + (self.vertical * v) - self.origin,
-        }
-    }
 }
 
 pub trait Solid {

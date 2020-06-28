@@ -21,7 +21,22 @@ fn main() {
     println!("255");
 
     // Setup vectors for ray tracing
-    let cam = Camera::new(Vec3(-2.0, 2.0, 1.0), Vec3(0.0, 0.0, -1.0), Vec3(0.0, 1.0, 0.0), 20.0, nx as f64 / ny as f64);
+    let lookat = Vec3(0.0, 0.0, -1.0);
+    let lookfrom = Vec3(3.0, 3.0, 2.0);
+    let vup = Vec3(0.0, 1.0, 0.0);
+    let dist_to_focus = (lookfrom - lookat).len();
+    let aperature = 2.0;
+    let aspect_ratio = nx as f64 / ny as f64;
+
+    let cam = Camera::new(
+        lookfrom,
+        lookat,
+        vup,
+        20.0,
+        aspect_ratio,
+        aperature,
+        dist_to_focus,
+    );
 
     // create geometry
     
