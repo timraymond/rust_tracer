@@ -5,8 +5,8 @@ use rand::Rng;
 
 fn main() {
     // define extents
-    let nx = 200;
-    let ny = 100;
+    let nx = 2000;
+    let ny = 1000;
     let ns = 100;
 
     let max_depth = 50;
@@ -21,11 +21,11 @@ fn main() {
     println!("255");
 
     // Setup vectors for ray tracing
-    let lookat = Vec3(0.0, 0.0, -1.0);
-    let lookfrom = Vec3(3.0, 3.0, 2.0);
+    let lookat = Vec3(0.0, 0.0, 0.0);
+    let lookfrom = Vec3(13.0, 2.0, 3.0);
     let vup = Vec3(0.0, 1.0, 0.0);
-    let dist_to_focus = (lookfrom - lookat).len();
-    let aperature = 2.0;
+    let dist_to_focus = 10.0;
+    let aperature = 0.1;
     let aspect_ratio = nx as f64 / ny as f64;
 
     let cam = Camera::new(
@@ -39,47 +39,7 @@ fn main() {
     );
 
     // create geometry
-    
-    let sg = SolidGroup{
-        solids: vec![
-            Sphere{
-                center: Vec3(0.0, 0.0, -1.0),
-                radius: 0.5,
-                material: &Lambertian{
-                    albedo: Vec3(0.1, 0.2, 0.5),
-                },
-            },
-            Sphere{
-                center: Vec3(0.0, -100.5, -1.0),
-                radius: 100.0,
-                material: &Lambertian{
-                    albedo: Vec3(0.8, 0.8, 0.0),
-                },
-            },
-            Sphere{
-                center: Vec3(1.0, 0.0, -1.0),
-                radius: 0.5,
-                material: &Metal{
-                    albedo: Vec3(0.8, 0.6, 0.2),
-                    fuzz: 0.0,
-                },
-            },
-            Sphere{
-                center: Vec3(-1.0, 0.0, -1.0),
-                radius: 0.5,
-                material: &Dielectric{
-                    ref_idx: 1.5,
-                },
-            },
-            Sphere{
-                center: Vec3(-1.0, 0.0, -1.0),
-                radius: -0.45,
-                material: &Dielectric{
-                    ref_idx: 1.5,
-                },
-            },
-            ],
-        };
+    let sg = random_scene();
 
     let mut rng = rand::thread_rng();
 
@@ -136,4 +96,99 @@ fn color(r: &Ray, s: &dyn Solid, depth: isize) -> Vec3 {
         }
     }
 
+}
+
+fn random_scene() -> SolidGroup<Sphere> {
+    let mut scene = vec!(
+        Sphere{
+            center: Vec3(0.0, -1000.0, 0.0),
+            radius: 1000.0,
+            material: Box::new(Lambertian{
+                albedo: Vec3(0.5, 0.5, 0.5),
+            }),
+        },
+    );
+
+    let mut rng = rand::thread_rng();
+
+    for a in -11..11 {
+        for b in -11..11 {
+            let ra: f64 = rng.gen();
+            let rb: f64 = rng.gen();
+
+            let center = Vec3(
+                a as f64 + ra * 0.9,
+                0.2,
+                b as f64 + rb * 0.9,
+            );
+
+            let radius = 0.2;
+
+            if (center - Vec3(4.0, 0.2, 0.0)).len() > 0.9 {
+                let material = random_mat();
+                scene.push(Sphere{
+                    center,
+                    radius,
+                    material: material,
+                });
+            }
+        }
+    }
+
+    scene.push(Sphere{
+        center: Vec3(0.0, 1.0, 0.0),
+        radius: 1.0,
+        material: Box::new(Dielectric{
+            ref_idx: 1.5,
+        }),
+    });
+
+    scene.push(Sphere{
+        center: Vec3(-4.0, 1.0, 0.0),
+        radius: 1.0,
+        material: Box::new(Lambertian{
+            albedo: Vec3(0.4, 0.2, 0.1),
+        }),
+    });
+
+    scene.push(Sphere{
+        center: Vec3(4.0, 1.0, 0.0),
+        radius: 1.0,
+        material: Box::new(Metal{
+            albedo: Vec3(0.7, 0.6, 0.0),
+            fuzz: 0.0,
+        }),
+    });
+
+    return SolidGroup{
+        solids: scene,
+    };
+}
+
+fn random_mat() -> Box<dyn Material> {
+    let mut rng = rand::thread_rng();
+    let choose_mat: f64 = rng.gen();
+
+    if choose_mat < 0.8 {
+        Box::new(Lambertian{
+            albedo: Vec3(
+                rng.gen(),
+                rng.gen(),
+                rng.gen(),
+            ),
+        })
+    } else if choose_mat < 0.95 {
+        Box::new(Metal{
+            albedo: Vec3(
+                rng.gen_range(0.5, 1.0),
+                rng.gen_range(0.5, 1.0),
+                rng.gen_range(0.5, 1.0),
+            ),
+            fuzz: rng.gen_range(0.0, 0.5),
+        })
+    } else {
+        Box::new(Dielectric{
+            ref_idx: 1.5,
+        })
+    }
 }

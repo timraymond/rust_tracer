@@ -218,13 +218,13 @@ impl<T: Solid> Solid for SolidGroup<T> {
     }
 }
 
-pub struct Sphere<'a> {
+pub struct Sphere {
     pub center: Vec3,
     pub radius: f64,
-    pub material: &'a dyn Material,
+    pub material: Box<dyn Material>,
 }
 
-impl <'a> Solid for Sphere<'a> {
+impl Solid for Sphere {
     fn hit(&self, r: &Ray, t_min: f64, t_max: f64) -> Option<HitRecord> {
         let oc = r.origin - self.center;
 
@@ -241,7 +241,7 @@ impl <'a> Solid for Sphere<'a> {
                 return Some(HitRecord{
                     t: near,
                     p: p,
-                    material: self.material,
+                    material: self.material.as_ref(),
                     normal: (p - self.center) / self.radius,
                 });
             }
@@ -254,7 +254,7 @@ impl <'a> Solid for Sphere<'a> {
                 return Some(HitRecord{
                     t: far,
                     p: p,
-                    material: self.material,
+                    material: self.material.as_ref(),
                     normal: (p - self.center) / self.radius,
                 });
             }
