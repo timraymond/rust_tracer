@@ -1,12 +1,28 @@
 mod vec3;
+mod geometry;
+mod material;
 
 use vec3::*;
+
+use material::{
+    Lambertian,
+    Dielectric,
+    Metal,
+    Material
+};
+
+use geometry::{
+    Solid,
+    SolidGroup,
+    Sphere
+};
+
 use rand::Rng;
 
 fn main() {
     // define extents
-    let nx = 2000;
-    let ny = 1000;
+    let nx = 4096;
+    let ny = 2160;
     let ns = 100;
 
     let max_depth = 50;
@@ -45,6 +61,7 @@ fn main() {
 
     // Output color information
     for j in (0..ny).rev() {
+        eprintln!("Scanlines remaining: {}", j);
         for i in 0..nx {
 
             let mut col = Vec3(0.0, 0.0, 0.0);
@@ -70,6 +87,7 @@ fn main() {
             println!("{} {} {}", ir, ig, ib);
         }
     }
+    eprintln!("Done!");
 }
 
 fn color(r: &Ray, s: &dyn Solid, depth: isize) -> Vec3 {
